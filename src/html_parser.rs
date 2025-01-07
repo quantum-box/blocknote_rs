@@ -161,6 +161,27 @@ fn parse_blocks(root: &NodeRef) -> Vec<Block> {
     // Handle different block types
     if let Some(elem) = root.as_element() {
         match elem.name.local.to_lowercase().as_str() {
+            "pre" => {
+                if let Some(code) = root.select_first("code").ok() {
+                    let mut props = HashMap::new();
+                    
+                    // Extract language from data-language attribute
+                    if let Some(lang) = code.attributes.borrow().get("data-language") {
+                        props.insert("language".to_string(), lang.to_string());
+                    }
+                    
+                    blocks.push(Block {
+                        id: generate_id(),
+                        block_type: "codeBlock".to_string(),
+                        content: BlockContent::Inline(vec![InlineContent {
+                            text: code.text_contents(),
+                            styles: HashMap::new(),
+                        }]),
+                        props,
+                        children: vec![],
+                    });
+                }
+            }
             "p" | "div" => {
                 // Check if this div contains block-level elements
                 let has_block_children = root.children().any(|child| {
@@ -267,7 +288,6 @@ fn parse_table_block(node: &NodeRef) -> Block {
 
 fn parse_inline_content(node: &NodeRef) -> Vec<InlineContent> {
     let mut content = Vec::new();
-    let mut current_text = String::new();
     let mut current_styles = HashMap::new();
     
     // Process text nodes and collect styles
@@ -409,6 +429,27 @@ mod tests {
                 assert_eq!(table.rows[0].cells.len(), 2);
             }
             _ => panic!("Expected table content"),
+        }
+    }
+
+    #[test]
+    fn test_parse_code_block() {
+        let html = r#"<pre><code data-language="rust">fn main() {
+    println!("Hello");
+}</code></pre>"#;
+        
+        let blocks = try_parse_html_to_blocks(html);
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(blocks[0].block_type, "codeBlock");
+        assert_eq!(blocks[0].props.get("language"), Some(&"rust".to_string()));
+        
+        match &blocks[0].content {
+            BlockContent::Inline(content) => {
+                assert_eq!(content[0].text.trim(), r#"fn main() {
+    println!("Hello");
+}"#);
+            }
+            _ => panic!("Expected inline content"),
         }
     }
 }
