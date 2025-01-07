@@ -120,6 +120,7 @@ version = "0.1.0"
 dependencies = [
  "comrak",
  "kuchiki",
+ "markup5ever",
  "serde",
  "serde_json",
 ]

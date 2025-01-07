@@ -1,8 +1,12 @@
+extern crate kuchiki;
+
 pub mod blocks;
 pub mod html;
+pub mod html_parser;
 
 pub use blocks::*;
 pub use html::*;
+pub use html_parser::*;
 
 #[cfg(test)]
 mod tests {
