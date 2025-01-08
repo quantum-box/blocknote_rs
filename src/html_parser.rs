@@ -334,7 +334,7 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
     let mut block = Block {
         id: generate_id(),
         block_type: "bulletListItem".to_string(),
-        content: BlockContent::None,
+        content: BlockContent::Inline(vec![]),
         props: parse_block_props(node),
         children: Vec::new(),
     };

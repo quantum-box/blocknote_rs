@@ -11,6 +11,7 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
     options.extension.tasklist = true;
     options.extension.superscript = true;
     options.extension.footnotes = true;
+    options.extension.fenced_code_blocks = true;
     options.render.unsafe_ = true;
 
     // Convert markdown to HTML using comrak
