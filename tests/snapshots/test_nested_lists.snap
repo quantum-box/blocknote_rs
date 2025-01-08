@@ -1,0 +1,20 @@
+---
+source: tests/snapshots.rs
+expression: html
+---
+<div class="bn-block-group">
+  <div class="bn-block" data-type="bulletListItem">
+    <div class="bn-block-content">Item 1</div>
+    <div class="bn-block-group">
+      <div class="bn-block" data-type="bulletListItem">
+        <div class="bn-block-content">Nested 1</div>
+      </div>
+      <div class="bn-block" data-type="bulletListItem">
+        <div class="bn-block-content">Nested 2</div>
+      </div>
+    </div>
+  </div>
+  <div class="bn-block" data-type="bulletListItem">
+    <div class="bn-block-content">Item 2</div>
+  </div>
+</div>

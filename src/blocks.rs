@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Represents the different types of DOM elements in BlockNote
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

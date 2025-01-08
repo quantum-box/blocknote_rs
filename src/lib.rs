@@ -6,10 +6,13 @@ pub mod html_parser;
 pub mod markdown;
 pub mod markdown_parser;
 
+pub mod test_utils;
+
 pub use blocks::*;
 pub use html::*;
 pub use html_parser::*;
 pub use markdown::*;
+pub use markdown_parser::try_parse_markdown_to_blocks;
 
 #[cfg(test)]
 mod tests {
@@ -24,16 +27,14 @@ mod tests {
         let block = Block {
             id: "test".to_string(),
             block_type: "paragraph".to_string(),
-            content: BlockContent::Inline(vec![
-                InlineContent {
-                    text: "Hello".to_string(),
-                    styles,
-                }
-            ]),
+            content: BlockContent::Inline(vec![InlineContent {
+                text: "Hello".to_string(),
+                styles,
+            }]),
             props: HashMap::new(),
             children: vec![],
         };
-        
+
         let html = blocks_to_full_html(&[block]);
         assert!(html.contains("bn-block-group"));
         assert!(html.contains("bn-block"));
@@ -47,12 +48,10 @@ mod tests {
         let block1 = Block {
             id: "1".to_string(),
             block_type: "bulletListItem".to_string(),
-            content: BlockContent::Inline(vec![
-                InlineContent {
-                    text: "Item 1".to_string(),
-                    styles: HashMap::new(),
-                }
-            ]),
+            content: BlockContent::Inline(vec![InlineContent {
+                text: "Item 1".to_string(),
+                styles: HashMap::new(),
+            }]),
             props: HashMap::new(),
             children: vec![],
         };
@@ -60,16 +59,14 @@ mod tests {
         let block2 = Block {
             id: "2".to_string(),
             block_type: "bulletListItem".to_string(),
-            content: BlockContent::Inline(vec![
-                InlineContent {
-                    text: "Item 2".to_string(),
-                    styles: HashMap::new(),
-                }
-            ]),
+            content: BlockContent::Inline(vec![InlineContent {
+                text: "Item 2".to_string(),
+                styles: HashMap::new(),
+            }]),
             props: HashMap::new(),
             children: vec![],
         };
-        
+
         let html = blocks_to_html_lossy(&[block1, block2]);
         assert!(html.contains("<ul>"));
         assert!(html.contains("<li>"));
@@ -85,20 +82,18 @@ mod tests {
             content: BlockContent::Table(TableContent {
                 content_type: "default".to_string(),
                 column_widths: vec![Some(100.0), Some(200.0)],
-                rows: vec![
-                    TableRow {
-                        cells: vec![
-                            vec![InlineContent {
-                                text: "Cell 1".to_string(),
-                                styles: HashMap::new(),
-                            }],
-                            vec![InlineContent {
-                                text: "Cell 2".to_string(),
-                                styles: HashMap::new(),
-                            }],
-                        ],
-                    }
-                ],
+                rows: vec![TableRow {
+                    cells: vec![
+                        vec![InlineContent {
+                            text: "Cell 1".to_string(),
+                            styles: HashMap::new(),
+                        }],
+                        vec![InlineContent {
+                            text: "Cell 2".to_string(),
+                            styles: HashMap::new(),
+                        }],
+                    ],
+                }],
             }),
             props: HashMap::new(),
             children: vec![],
