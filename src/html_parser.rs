@@ -368,15 +368,7 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
                     }
 
                     let is_ordered = elem.name.local.to_lowercase() == "ol";
-                    // Create a new block for this list item's content
-                    let mut parent_block = Block {
-                        id: generate_id(),
-                        block_type: if is_ordered { "numberedListItem" } else { "bulletListItem" }.to_string(),
-                        content: BlockContent::Inline(parse_inline_content(&content_nodes)),
-                        props: HashMap::new(),
-                        children: Vec::new(),
-                    };
-                    
+
                     // Process nested list items
                     for li in child.children().filter(|n| {
                         n.as_element()
@@ -386,11 +378,9 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
                         let nested_block = parse_list_item(&li, is_ordered);
                         // Only add as nested if it's actually a list item
                         if nested_block.block_type.ends_with("ListItem") {
-                            parent_block.children.push(nested_block);
+                            nested_lists.push(nested_block);
                         }
                     }
-
-                    nested_lists.push(parent_block);
                 }
                 "div" => {
                     if elem
