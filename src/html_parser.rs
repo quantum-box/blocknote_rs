@@ -353,14 +353,31 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
 
     let mut content_nodes = Vec::new();
     let mut nested_lists = Vec::new();
+    let mut current_text = String::new();
 
     // First pass: separate content and nested lists
     for child in node.children() {
         if let Some(elem) = child.as_element() {
             match elem.name.local.to_lowercase().as_str() {
                 "ul" | "ol" => {
+                    // If we have accumulated text, create a content node for it
+                    if !current_text.trim().is_empty() {
+                        let text_node = NodeRef::new_text(current_text.clone());
+                        content_nodes.push(text_node);
+                        current_text.clear();
+                    }
+
                     let is_ordered = elem.name.local.to_lowercase() == "ol";
-                    // Process nested list
+                    // Create a new block for this list item's content
+                    let mut parent_block = Block {
+                        id: generate_id(),
+                        block_type: if is_ordered { "numberedListItem" } else { "bulletListItem" }.to_string(),
+                        content: BlockContent::Inline(parse_inline_content(&content_nodes)),
+                        props: HashMap::new(),
+                        children: Vec::new(),
+                    };
+                    
+                    // Process nested list items
                     for li in child.children().filter(|n| {
                         n.as_element()
                             .map(|e| e.name.local.to_lowercase() == "li")
@@ -369,9 +386,11 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
                         let nested_block = parse_list_item(&li, is_ordered);
                         // Only add as nested if it's actually a list item
                         if nested_block.block_type.ends_with("ListItem") {
-                            nested_lists.push(nested_block);
+                            parent_block.children.push(nested_block);
                         }
                     }
+
+                    nested_lists.push(parent_block);
                 }
                 "div" => {
                     if elem
@@ -425,8 +444,8 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
                     }
                 }
             }
-        } else if !is_whitespace_node(&child) {
-            content_nodes.push(child.clone());
+        } else if let Some(text) = child.as_text() {
+            current_text.push_str(&text.borrow());
         }
     }
 
