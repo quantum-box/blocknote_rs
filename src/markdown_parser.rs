@@ -18,7 +18,6 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
 
     // Parse the HTML into blocks using our HTML parser
     try_parse_html_to_blocks(&html)
-
 }
 #[cfg(test)]
 mod tests {
