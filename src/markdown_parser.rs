@@ -126,156 +126,133 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
     let doc = kuchiki::parse_html().one(html.as_str());
     let mut list_blocks = Vec::new();
 
+    // Helper function to get child index, similar to BlockNote's getChildIndex
+    fn get_child_index(node: &kuchiki::NodeRef) -> usize {
+        if let Some(parent) = node.parent() {
+            parent.children()
+                .position(|child| child.as_ptr() == node.as_ptr())
+                .unwrap_or(0)
+        } else {
+            0
+        }
+    }
+
+    // Helper function to check if node is whitespace, similar to BlockNote's isWhitespaceNode
+    fn is_whitespace_node(node: &kuchiki::NodeRef) -> bool {
+        match node.data() {
+            kuchiki::NodeData::Text(text) => {
+                text.borrow().trim().is_empty()
+            }
+            _ => false
+        }
+    }
+
+    // First step: lift nested lists to parent level
+    fn lift_nested_lists_to_parent(node: &kuchiki::NodeRef) {
+        // Find all nested lists (ul or ol inside li)
+        let mut nested_lists = Vec::new();
+        for list_item in node.select("li > ul, li > ol").unwrap() {
+            nested_lists.push(list_item.as_node().clone());
+        }
+
+        for list in nested_lists {
+            let index = get_child_index(&list);
+            let parent_item = list.parent().unwrap();
+            
+            // Get siblings after the list
+            let mut siblings_after = Vec::new();
+            let mut current = list.next_sibling();
+            while let Some(sibling) = current {
+                siblings_after.push(sibling.clone());
+                current = sibling.next_sibling();
+            }
+
+            // Remove list and siblings
+            list.detach();
+            for sibling in &siblings_after {
+                sibling.detach();
+            }
+
+            // Insert list after parent
+            parent_item.insert_after(list);
+
+            // Process siblings
+            for sibling in siblings_after.iter().rev() {
+                if !is_whitespace_node(sibling) {
+                    let container = kuchiki::NodeRef::new_element("li", None);
+                    container.append(sibling.clone());
+                    list.insert_after(container);
+                }
+            }
+
+            // Remove empty parent
+            if parent_item.children().count() == 0 {
+                parent_item.detach();
+            }
+        }
+    }
+
+    // Second step: create block groups
+    fn create_groups(node: &kuchiki::NodeRef) {
+        // Find all list items followed by a list
+        let mut list_pairs = Vec::new();
+        for list in node.select("li + ul, li + ol").unwrap() {
+            if let Some(prev) = list.as_node().previous_sibling() {
+                if prev.as_element().map_or(false, |e| e.name.local.as_ref() == "li") {
+                    list_pairs.push((prev.clone(), list.as_node().clone()));
+                }
+            }
+        }
+
+        for (list_item, list) in list_pairs {
+            // Create container div
+            let block_container = kuchiki::NodeRef::new_element("div", None);
+            list_item.insert_after(block_container.clone());
+            block_container.append(list_item);
+
+            // Create block group
+            let block_group = kuchiki::NodeRef::new_element("div", None);
+            block_group.as_element_mut().unwrap().attributes.borrow_mut()
+                .insert("data-node-type".into(), "blockGroup".into());
+            block_container.append(block_group.clone());
+
+            // Move subsequent lists into block group
+            while let Some(next) = block_container.next_sibling() {
+                if let Some(elem) = next.as_element() {
+                    if elem.name.local.as_ref() == "ul" || elem.name.local.as_ref() == "ol" {
+                        block_group.append(next);
+                        continue;
+                    }
+                }
+                break;
+            }
+        }
+    }
+
     fn process_list_item(node: &kuchiki::NodeRef, is_ordered: bool) -> Option<Block> {
-        let mut children = Vec::new();
-        let mut direct_text = String::new();
-
-        // First pass: collect direct text content (excluding nested lists)
-        // Only process immediate text nodes and non-list elements
-        for child in node.children() {
-            match child.data() {
-                kuchiki::NodeData::Text(text_content) => {
-                    let borrowed = text_content.borrow();
-                    let content = borrowed.trim();
-                    if !content.is_empty() {
-                        if !direct_text.is_empty() {
-                            direct_text.push(' ');
-                        }
-                        direct_text.push_str(content);
-                    }
-                }
-                kuchiki::NodeData::Element(ref element) => {
-                    if element.name.local.as_ref() != "ul" && element.name.local.as_ref() != "ol" {
-                        // For non-list elements, only process their immediate text content
-                        for immediate_child in child.children() {
-                            if let kuchiki::NodeData::Text(text_content) = immediate_child.data() {
-                                let borrowed = text_content.borrow();
-                                let content = borrowed.trim();
-                                if !content.is_empty() {
-                                    if !direct_text.is_empty() {
-                                        direct_text.push(' ');
-                                    }
-                                    direct_text.push_str(content);
-                                }
-                            }
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        // Second pass: process nested lists
-        for child in node.children() {
-            if let kuchiki::NodeData::Element(ref element) = child.data() {
-                if element.name.local.as_ref() == "ul" || element.name.local.as_ref() == "ol" {
-                    let nested_is_ordered = element.name.local.as_ref() == "ol";
-
-                    // Process each nested list item
-                    for nested_item in child.children() {
-                        if let Some(nested_elem) = nested_item.as_element() {
-                            if nested_elem.name.local.as_ref() == "li" {
-                                // Create a new context for nested item
-                                let mut nested_text = String::new();
-
-                                // Only collect immediate text content
-                                for immediate_child in nested_item.children() {
-                                    if let kuchiki::NodeData::Text(text_content) =
-                                        immediate_child.data()
-                                    {
-                                        let borrowed = text_content.borrow();
-                                        let content = borrowed.trim();
-                                        if !content.is_empty() {
-                                            if !nested_text.is_empty() {
-                                                nested_text.push(' ');
-                                            }
-                                            nested_text.push_str(content);
-                                        }
-                                    }
-                                }
-
-                                // Create nested block with its own text
-                                let nested_text = nested_text.trim().to_string();
-                                if !nested_text.is_empty() {
-                                    let mut nested_children = Vec::new();
-
-                                    // Process any nested lists within this item
-                                    for nested_child in nested_item.children() {
-                                        if let kuchiki::NodeData::Element(ref nested_element) =
-                                            nested_child.data()
-                                        {
-                                            if nested_element.name.local.as_ref() == "ul"
-                                                || nested_element.name.local.as_ref() == "ol"
-                                            {
-                                                let deeper_is_ordered =
-                                                    nested_element.name.local.as_ref() == "ol";
-
-                                                // Process each nested list item
-                                                for deeper_item in nested_child.children() {
-                                                    if let Some(deeper_elem) =
-                                                        deeper_item.as_element()
-                                                    {
-                                                        if deeper_elem.name.local.as_ref() == "li" {
-                                                            if let Some(nested_block) =
-                                                                process_list_item(
-                                                                    &deeper_item,
-                                                                    deeper_is_ordered,
-                                                                )
-                                                            {
-                                                                nested_children.push(nested_block);
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    let nested_block = Block {
-                                        id: format!(
-                                            "list-{}",
-                                            nested_text.chars().take(10).collect::<String>()
-                                        ),
-                                        block_type: if nested_is_ordered {
-                                            "numberedListItem".to_string()
-                                        } else {
-                                            "bulletListItem".to_string()
-                                        },
-                                        content: BlockContent::Inline(vec![InlineContent {
-                                            text: nested_text,
-                                            styles: std::collections::HashMap::new(),
-                                        }]),
-                                        props: std::collections::HashMap::new(),
-                                        children: nested_children,
-                                    };
-                                    children.push(nested_block);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        let direct_text = direct_text.trim().to_string();
-        if direct_text.is_empty() && children.is_empty() {
+        // Get direct text content
+        let text_content = node.text_contents().trim().to_string();
+        if text_content.is_empty() {
             return None;
         }
 
-        Some(Block {
-            id: format!("list-{}", direct_text.chars().take(10).collect::<String>()),
+        // Create the list item block
+        let block = Block {
+            id: format!("list-{}", text_content.chars().take(10).collect::<String>()),
             block_type: if is_ordered {
                 "numberedListItem".to_string()
             } else {
                 "bulletListItem".to_string()
             },
             content: BlockContent::Inline(vec![InlineContent {
-                text: direct_text,
+                text: text_content,
                 styles: std::collections::HashMap::new(),
             }]),
             props: std::collections::HashMap::new(),
-            children,
-        })
+            children: Vec::new(),
+        };
+
+        Some(block)
     }
 
     // Process lists
@@ -296,7 +273,7 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
                     if let Some(elem) = child.as_element() {
                         if elem.name.local.eq_str_ignore_ascii_case("li") {
                             if let Some(block) = process_list_item(&child, is_ordered) {
-                                println!("  Adding list item: {:?}", block.content);
+                                println!("  Adding list item: {:?} with {} children", block.content, block.children.len());
                                 list_blocks.push(block);
                             }
                         }
@@ -404,7 +381,7 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::blocks::BlockContent;
+    use crate::blocks::{Block, BlockContent, InlineContent};
 
     #[test]
     fn test_parse_simple_paragraph() {

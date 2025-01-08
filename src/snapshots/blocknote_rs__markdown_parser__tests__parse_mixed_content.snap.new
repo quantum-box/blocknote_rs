@@ -1,7 +1,8 @@
 ---
 source: src/markdown_parser.rs
-assertion_line: 477
+assertion_line: 435
 expression: html
 ---
 <html><head></head><body><div><div class="bn-block-group"><div class="bn-block-container"><div class="bn-block" data-prop-level="1" data-type="heading"><div class="bn-block-content"><span>Main Title</span></div></div></div><div class="bn-block-container"><div class="bn-block" data-type="paragraph"><div class="bn-block-content"><span>A paragraph with </span><span data-style-bold="true">bold</span><span> and </span><span data-style-italic="true">italic</span><span> text.</span></div></div></div><div class="bn-block-container"><div class="bn-block" data-prop-language="python" data-type="codeBlock"><div class="bn-block-content"><span>def hello():
-    print("Hello, World!")</span></div></div></div><div class="bn-block-container"><div class="bn-block" data-type="bulletListItem"><div class="bn-block-content"><span>List item 1</span></div></div></div><div class="bn-block-container"><div class="bn-block" data-type="paragraph"><div class="bn-block-content"><span>Another paragraph with </span><span data-style-code="true">inline code</span><span>.</span></div></div></div></div></div></body></html>
+    print("Hello, World!")</span></div></div></div><div class="bn-block-container"><div class="bn-block" data-type="bulletListItem"><div class="bn-block-content"><span>List item 1
+Nested item 1.1Nested item 1.2</span></div></div></div><div class="bn-block-container"><div class="bn-block" data-type="paragraph"><div class="bn-block-content"><span>Another paragraph with </span><span data-style-code="true">inline code</span><span>.</span></div></div></div></div></div></body></html>

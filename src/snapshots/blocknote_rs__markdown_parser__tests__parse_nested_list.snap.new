@@ -1,6 +1,7 @@
 ---
 source: src/markdown_parser.rs
-assertion_line: 452
+assertion_line: 410
 expression: html
 ---
-<html><head></head><body><div><div class="bn-block-group"><div class="bn-block-container"><div class="bn-block" data-type="bulletListItem"><div class="bn-block-content"><span>Item 1</span></div></div></div><div class="bn-block-container"><div class="bn-block" data-type="bulletListItem"><div class="bn-block-content"><span>Item 2</span></div></div></div></div></div></body></html>
+<html><head></head><body><div><div class="bn-block-group"><div class="bn-block-container"><div class="bn-block" data-type="bulletListItem"><div class="bn-block-content"><span>Item 1
+Nested 1Nested 2</span></div></div></div><div class="bn-block-container"><div class="bn-block" data-type="bulletListItem"><div class="bn-block-content"><span>Item 2</span></div></div></div></div></div></body></html>

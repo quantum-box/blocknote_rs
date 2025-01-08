@@ -1,0 +1,8 @@
+---
+source: tests/snapshots.rs
+assertion_line: 11
+expression: html
+---
+<html><head></head><body><div><div class="bn-block-group"><div class="bn-block-container"><div class="bn-block" data-prop-level="1" data-type="heading"><div class="bn-block-content"><span>Test Document</span></div></div></div><div class="bn-block-container"><div class="bn-block" data-type="paragraph"><div class="bn-block-content"><span>This is a </span><span data-style-bold="true">bold</span><span> and </span><span data-style-italic="true">italic</span><span> text.</span></div></div></div><div class="bn-block-container"><div class="bn-block" data-prop-language="rust" data-type="codeBlock"><div class="bn-block-content"><span>fn main() {
+    println!("Hello, World!");
+}</span></div></div></div><div class="bn-block-container"><div class="bn-block" data-type="bulletListItem"><div class="bn-block-content"><span>First item</span></div><div class="bn-block-group"><div class="bn-block-container"><div class="bn-block" data-type="bulletListItem"><div class="bn-block-content"><span>Nested item</span></div></div></div></div></div></div><div class="bn-block-container"><div class="bn-block" data-type="table"><div class="bn-block-content"><table class="bn-table" data-column-widths="[100.0,200.0]" data-type="default"><tr><td><div class="bn-table-cell-content"><span>Header 1</span></div></td><td><div class="bn-table-cell-content"><span>Header 2</span></div></td></tr><tr><td><div class="bn-table-cell-content"><span>Cell 1</span></div></td><td><div class="bn-table-cell-content"><span>Cell 2</span></div></td></tr></table></div></div></div></div></div></body></html>
