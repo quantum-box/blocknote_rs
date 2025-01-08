@@ -1,4 +1,5 @@
 extern crate kuchiki;
+extern crate markup5ever;
 
 pub mod blocks;
 pub mod html;
@@ -7,6 +8,9 @@ pub mod markdown;
 pub mod markdown_parser;
 
 pub mod test_utils;
+
+// Re-export macros for use in other modules
+pub use markup5ever::{local_name, namespace_url};
 
 pub use blocks::*;
 pub use html::*;

@@ -1,6 +1,8 @@
 use crate::blocks::{Block, BlockContent, InlineContent};
+use crate::{local_name, namespace_url};
 use comrak::{markdown_to_html, ComrakOptions};
 use kuchiki::traits::*;
+use markup5ever::QualName;
 
 #[allow(dead_code)]
 fn text_starts_with_indent(block: &Block) -> bool {
@@ -127,10 +129,20 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
     let mut list_blocks = Vec::new();
 
     // Helper function to get child index, similar to BlockNote's getChildIndex
+    #[allow(dead_code)]
     fn get_child_index(node: &kuchiki::NodeRef) -> usize {
         if let Some(parent) = node.parent() {
-            parent.children()
-                .position(|child| child.as_ptr() == node.as_ptr())
+            parent
+                .children()
+                .position(|child| {
+                    if let (Some(child_elem), Some(node_elem)) =
+                        (child.as_element(), node.as_element())
+                    {
+                        std::ptr::eq(child_elem, node_elem)
+                    } else {
+                        false
+                    }
+                })
                 .unwrap_or(0)
         } else {
             0
@@ -138,16 +150,16 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
     }
 
     // Helper function to check if node is whitespace, similar to BlockNote's isWhitespaceNode
+    #[allow(dead_code)]
     fn is_whitespace_node(node: &kuchiki::NodeRef) -> bool {
         match node.data() {
-            kuchiki::NodeData::Text(text) => {
-                text.borrow().trim().is_empty()
-            }
-            _ => false
+            kuchiki::NodeData::Text(text) => text.borrow().trim().is_empty(),
+            _ => false,
         }
     }
 
     // First step: lift nested lists to parent level
+    #[allow(dead_code)]
     fn lift_nested_lists_to_parent(node: &kuchiki::NodeRef) {
         // Find all nested lists (ul or ol inside li)
         let mut nested_lists = Vec::new();
@@ -156,9 +168,8 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
         }
 
         for list in nested_lists {
-            let index = get_child_index(&list);
+            let _index = get_child_index(&list);
             let parent_item = list.parent().unwrap();
-            
             // Get siblings after the list
             let mut siblings_after = Vec::new();
             let mut current = list.next_sibling();
@@ -174,12 +185,19 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
             }
 
             // Insert list after parent
-            parent_item.insert_after(list);
+            parent_item.insert_after(list.clone());
 
             // Process siblings
             for sibling in siblings_after.iter().rev() {
                 if !is_whitespace_node(sibling) {
-                    let container = kuchiki::NodeRef::new_element("li", None);
+                    let container = kuchiki::NodeRef::new_element(
+                        QualName::new(
+                            None,
+                            namespace_url!("http://www.w3.org/1999/xhtml"),
+                            local_name!("li"),
+                        ),
+                        None,
+                    );
                     container.append(sibling.clone());
                     list.insert_after(container);
                 }
@@ -193,27 +211,49 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
     }
 
     // Second step: create block groups
+    #[allow(dead_code)]
     fn create_groups(node: &kuchiki::NodeRef) {
         // Find all list items followed by a list
         let mut list_pairs = Vec::new();
         for list in node.select("li + ul, li + ol").unwrap() {
             if let Some(prev) = list.as_node().previous_sibling() {
-                if prev.as_element().map_or(false, |e| e.name.local.as_ref() == "li") {
+                if prev
+                    .as_element()
+                    .map_or(false, |e| e.name.local.as_ref() == "li")
+                {
                     list_pairs.push((prev.clone(), list.as_node().clone()));
                 }
             }
         }
 
-        for (list_item, list) in list_pairs {
+        for (list_item, _list) in list_pairs {
             // Create container div
-            let block_container = kuchiki::NodeRef::new_element("div", None);
+            let block_container = kuchiki::NodeRef::new_element(
+                QualName::new(
+                    None,
+                    namespace_url!("http://www.w3.org/1999/xhtml"),
+                    local_name!("div"),
+                ),
+                None,
+            );
             list_item.insert_after(block_container.clone());
             block_container.append(list_item);
 
             // Create block group
-            let block_group = kuchiki::NodeRef::new_element("div", None);
-            block_group.as_element_mut().unwrap().attributes.borrow_mut()
-                .insert("data-node-type".into(), "blockGroup".into());
+            let block_group = kuchiki::NodeRef::new_element(
+                QualName::new(
+                    None,
+                    namespace_url!("http://www.w3.org/1999/xhtml"),
+                    local_name!("div"),
+                ),
+                None,
+            );
+            block_group
+                .as_element()
+                .unwrap()
+                .attributes
+                .borrow_mut()
+                .insert("data-node-type", "blockGroup".into());
             block_container.append(block_group.clone());
 
             // Move subsequent lists into block group
@@ -273,7 +313,11 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
                     if let Some(elem) = child.as_element() {
                         if elem.name.local.eq_str_ignore_ascii_case("li") {
                             if let Some(block) = process_list_item(&child, is_ordered) {
-                                println!("  Adding list item: {:?} with {} children", block.content, block.children.len());
+                                println!(
+                                    "  Adding list item: {:?} with {} children",
+                                    block.content,
+                                    block.children.len()
+                                );
                                 list_blocks.push(block);
                             }
                         }
