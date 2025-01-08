@@ -216,10 +216,12 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
                                                         deeper_item.as_element()
                                                     {
                                                         if deeper_elem.name.local.as_ref() == "li" {
-                                                            if let Some(nested_block) = process_list_item(
-                                                                &deeper_item,
-                                                                deeper_is_ordered,
-                                                            ) {
+                                                            if let Some(nested_block) =
+                                                                process_list_item(
+                                                                    &deeper_item,
+                                                                    deeper_is_ordered,
+                                                                )
+                                                            {
                                                                 nested_children.push(nested_block);
                                                             }
                                                         }
@@ -288,8 +290,6 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
                     .as_node()
                     .as_element()
                     .map_or(false, |e| e.name.local.eq_str_ignore_ascii_case("ol"));
-
-
 
                 // Process only direct child list items at this level
                 for child in list.as_node().children() {
@@ -446,8 +446,6 @@ mod tests {
     fn test_parse_nested_list() {
         let markdown = "- Item 1\n  - Nested 1\n  - Nested 2\n- Item 2";
         let blocks = try_parse_markdown_to_blocks(markdown).unwrap();
-
-
 
         // Use snapshot testing instead of manual assertions
         let html = crate::blocks_to_full_html(&blocks);
