@@ -1,4 +1,3 @@
-use crate::blocks::Block;
 use crate::html_parser::try_parse_html_to_blocks;
 use comrak::{markdown_to_html, ComrakOptions};
 
