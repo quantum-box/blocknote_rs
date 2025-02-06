@@ -10,7 +10,6 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
     options.extension.tasklist = true;
     options.extension.superscript = true;
     options.extension.footnotes = true;
-    // Note: fenced code blocks are enabled by default in Comrak
     options.render.unsafe_ = true;
 
     // Convert markdown to HTML using comrak
@@ -22,7 +21,7 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::blocks::{Block, BlockContent};
+    use crate::blocks::BlockContent;
 
     #[test]
     fn test_parse_simple_paragraph() {
