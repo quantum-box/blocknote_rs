@@ -301,7 +301,7 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
     let mut block = Block {
         id: generate_id(),
         block_type: "bulletListItem".to_string(),
-        content: BlockContent::Inline(parse_single_node_content(node)),
+        content: BlockContent::Inline(Vec::new()),  // Will be updated after processing children
         props: parse_block_props(node),
         children: Vec::new(),
     };
@@ -318,7 +318,7 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
         }
     }
 
-    let mut content_nodes = Vec::<BlockContent>::new();
+    let mut inline_content = Vec::new();
     let mut nested_lists = Vec::new();
     let mut current_text = String::new();
 
@@ -330,16 +330,16 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
                     // If we have accumulated text, create a content node for it
                     if !current_text.trim().is_empty() {
                         let text_node = NodeRef::new_text(current_text.clone());
-                        content_nodes.push(BlockContent::Inline(vec![InlineContent {
+                        inline_content.push(InlineContent {
                             text: text_node.text_contents(),
                             styles: HashMap::new(),
-                        }]));
+                        });
                         current_text.clear();
                     }
                     nested_lists.push(child.clone());
                 }
                 _ => {
-                    content_nodes.push(BlockContent::Inline(parse_single_node_content(&child)));
+                    inline_content.extend(parse_single_node_content(&child));
                 }
             }
         } else if let Some(text) = child.as_text() {
@@ -349,11 +349,14 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
 
     // If we have any remaining text, create a content node for it
     if !current_text.trim().is_empty() {
-        content_nodes.push(BlockContent::Inline(vec![InlineContent {
+        inline_content.push(InlineContent {
             text: current_text,
             styles: HashMap::new(),
-        }]));
+        });
     }
+    
+    // Update block content with collected inline content
+    block.content = BlockContent::Inline(inline_content);
 
     // Process nested lists
     for list in nested_lists {
