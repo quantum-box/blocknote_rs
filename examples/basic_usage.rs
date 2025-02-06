@@ -1,4 +1,4 @@
-use blocknote_rs::{parse_html_to_blocks, parse_markdown_to_blocks};
+use rust_template::{parse_html_to_blocks, parse_markdown_to_blocks};
 
 fn main() {
     // HTMLからブロックへの変換例
@@ -14,7 +14,6 @@ fn main() {
             </li>
         </ul>
     "#;
-    
     let blocks = parse_html_to_blocks(html);
     println!("HTMLから変換されたブロック: {:#?}", blocks);
 
@@ -28,7 +27,6 @@ fn main() {
 - リストアイテム2
   - ネストされたアイテム
     "#;
-    
     if let Some(blocks) = parse_markdown_to_blocks(markdown) {
         println!("Markdownから変換されたブロック: {:#?}", blocks);
     }
