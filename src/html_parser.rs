@@ -405,7 +405,7 @@ fn parse_table_block(node: &NodeRef) -> Block {
                 .map(|e| e.name.local.to_lowercase() == "td")
                 .unwrap_or(false)
         }) {
-            cells.push(BlockContent::Inline(parse_single_node_content(&td)));
+            cells.push(vec![parse_single_node_content(&td)].concat());
         }
 
         rows.push(TableRow { cells });
