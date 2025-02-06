@@ -21,7 +21,7 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::blocks::BlockContent;
+    use crate::blocks::{Block, BlockContent};
 
     #[test]
     fn test_parse_simple_paragraph() {
