@@ -203,8 +203,14 @@ fn parse_blocks(root: &NodeRef) -> Vec<Block> {
 
                     // Extract language from class attribute (language-xxx)
                     if let Some(class_attr) = code.attributes.borrow().get("class") {
-                        if let Some(lang) = class_attr.split_whitespace().find(|s| s.starts_with("language-")) {
-                            props.insert("language".to_string(), lang.trim_start_matches("language-").to_string());
+                        if let Some(lang) = class_attr
+                            .split_whitespace()
+                            .find(|s| s.starts_with("language-"))
+                        {
+                            props.insert(
+                                "language".to_string(),
+                                lang.trim_start_matches("language-").to_string(),
+                            );
                         }
                     }
 
@@ -343,7 +349,7 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
     let mut block = Block {
         id: generate_id(),
         block_type: "bulletListItem".to_string(),
-        content: parse_single_node_content(node),
+        content: BlockContent::Inline(parse_single_node_content(node)),
         props: parse_block_props(node),
         children: Vec::new(),
     };
