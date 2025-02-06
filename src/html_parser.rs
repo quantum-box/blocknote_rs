@@ -339,8 +339,10 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
                     nested_lists.push(child.clone());
                 }
                 _ => {
-                    // Parse and extend inline content directly
-                    inline_content.extend(parse_single_node_content(&child));
+                    // Parse and extend inline content
+                    if let BlockContent::Inline(content) = BlockContent::Inline(parse_single_node_content(&child)) {
+                        inline_content.extend(content);
+                    }
                 }
             }
         } else if let Some(text) = child.as_text() {
