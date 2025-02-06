@@ -339,10 +339,8 @@ fn parse_list_item(node: &NodeRef, numbered: bool) -> Block {
                     nested_lists.push(child.clone());
                 }
                 _ => {
-                    // Wrap the parsed content in BlockContent::Inline before extending
-                    if let BlockContent::Inline(content) = BlockContent::Inline(parse_single_node_content(&child)) {
-                        inline_content.extend(content);
-                    }
+                    // Parse and extend inline content directly
+                    inline_content.extend(parse_single_node_content(&child));
                 }
             }
         } else if let Some(text) = child.as_text() {
@@ -405,7 +403,7 @@ fn parse_table_block(node: &NodeRef) -> Block {
                 .map(|e| e.name.local.to_lowercase() == "td")
                 .unwrap_or(false)
         }) {
-            cells.push(vec![parse_single_node_content(&td)].concat());
+            cells.push(parse_single_node_content(&td));
         }
 
         rows.push(TableRow { cells });
