@@ -52,8 +52,8 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
                             let text_contents = node.text_contents();
                             let text = text_contents.trim();
                             blocks_html.push_str(&format!(
-                                "<div class=\"bn-block-container\"><div class=\"bn-block\" data-type=\"heading\" data-props=\"{{&quot;level&quot;:{}}}\"><div class=\"bn-block-content\"><span>{}</span></div></div></div>",
-                                level, text
+                                "<div class=\"bn-block-container\"><div class=\"bn-block\" data-type=\"heading\" data-props=\"{{&quot;level&quot;:{}}}\" data-level=\"{}\"><div class=\"bn-block-content\"><span>{}</span></div></div></div>",
+                                level, level, text
                             ));
                             println!("Added heading block: {}", text);
                         }
@@ -208,12 +208,16 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
                         }
                         "ul" | "ol" => {
                             // Create block container for the list
-                            blocks_html.push_str("<div class=\"bn-block-container\"><div class=\"bn-block\" data-type=\"bulletedList\"><div class=\"bn-block-content\">");
+                            blocks_html.push_str("<div class=\"bn-block-container\"><div class=\"bn-block\" data-type=\"bulletedList\"><div class=\"bn-block-content\"><div class=\"bn-block-children\">");
 
                             // Process list items
                             if let Ok(items) = node.select("> li") {
                                 let items: Vec<_> = items.collect();
                                 for item in items {
+                                    // Create block for list item
+                                    blocks_html.push_str("<div class=\"bn-block-container\"><div class=\"bn-block\" data-type=\"bulletListItem\"><div class=\"bn-block-content\">");
+                                    
+                                    // Process item's text content
                                     let mut item_content = String::new();
                                     let mut has_nested_list = false;
 
@@ -242,18 +246,17 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
                                         }
                                     }
 
-                                    // Create block for current list item
-                                    blocks_html.push_str(&format!(
-                                        "<div class=\"bn-block-container\"><div class=\"bn-block\" data-type=\"bulletListItem\"><div class=\"bn-block-content\"><span>{}</span></div></div></div>",
-                                        item_content.trim()
-                                    ));
-
-                                    // Process nested lists if they exist
+                                    // Add text content if not empty
+                                    if !item_content.trim().is_empty() {
+                                        blocks_html.push_str(&format!("<span>{}</span>", item_content.trim()));
+                                    }
+                                    blocks_html.push_str("</div>");
+                                    
+                                    // Process nested content
                                     if has_nested_list {
-                                        // Add block-children container for nested list
                                         blocks_html.push_str("<div class=\"bn-block-children\">");
                                         // Create nested bulletedList block
-                                        blocks_html.push_str("<div class=\"bn-block-container\"><div class=\"bn-block\" data-type=\"bulletedList\"><div class=\"bn-block-content\">");
+                                        blocks_html.push_str("<div class=\"bn-block-container\"><div class=\"bn-block\" data-type=\"bulletedList\"><div class=\"bn-block-content\"><div class=\"bn-block-children\">");
                                         for child in item.as_node().children() {
                                             if let Some(child_elem) = child.as_element() {
                                                 if ["ul", "ol"]
@@ -389,13 +392,17 @@ pub fn try_parse_markdown_to_blocks(markdown: &str) -> Option<Vec<Block>> {
                                             }
                                         }
 
-                                        // Close nested bulletedList block and block-children
+                                        // Close nested bulletedList block and its children
                                         blocks_html.push_str("</div></div></div></div>");
+                                        // Close block-children of the list item
+                                        blocks_html.push_str("</div>");
                                     }
+                                    // Close the list item block
+                                    blocks_html.push_str("</div></div>");
                                 }
 
-                                // Close the list container
-                                blocks_html.push_str("</div></div></div>");
+                                // Close the list container and block-children
+                                blocks_html.push_str("</div></div></div></div>");
                             }
                         }
                         _ => {
