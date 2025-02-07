@@ -1,6 +1,5 @@
 ---
 source: tests/snapshots.rs
-assertion_line: 25
 expression: markdown
 ---
 # Test Document

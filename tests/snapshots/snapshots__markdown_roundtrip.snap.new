@@ -5,16 +5,16 @@ expression: roundtrip_markdown
 ---
 # Test Document
 
-This is a **bold** and *italic* text.
-
-```rust
-fn main() {
-    println!("Hello, World!");
-}
-```
+This is aboldanditalictext.
 
 - First item
+First item
+
 - Nested item
 | Header 1 | Header 2 |
-| --- | --- |
+| — | — |
+| Cell 1 | Cell 2 |
+Nested item
+| Header 1 | Header 2 |
+| — | — |
 | Cell 1 | Cell 2 |
