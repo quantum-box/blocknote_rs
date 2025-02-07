@@ -1,0 +1,33 @@
+---
+source: tests/snapshots.rs
+expression: html
+---
+<div class="bn-block-group">
+  <div class="bn-block" data-type="heading" data-level="1">
+    <div class="bn-block-content">Main Title</div>
+  </div>
+  <div class="bn-block" data-type="paragraph">
+    <div class="bn-block-content">A paragraph with <strong>bold</strong> and <em>italic</em> text.</div>
+  </div>
+  <div class="bn-block" data-type="codeBlock" data-language="python">
+    <div class="bn-block-content">def hello():
+    print("Hello, World!")</div>
+  </div>
+  <div class="bn-block" data-type="bulletListItem">
+    <div class="bn-block-content">List item 1</div>
+    <div class="bn-block-group">
+      <div class="bn-block" data-type="bulletListItem">
+        <div class="bn-block-content">Nested item 1.1</div>
+      </div>
+      <div class="bn-block" data-type="bulletListItem">
+        <div class="bn-block-content">Nested item 1.2</div>
+      </div>
+    </div>
+  </div>
+  <div class="bn-block" data-type="bulletListItem">
+    <div class="bn-block-content">List item 2</div>
+  </div>
+  <div class="bn-block" data-type="paragraph">
+    <div class="bn-block-content">Another paragraph with <code>inline code</code>.</div>
+  </div>
+</div>
